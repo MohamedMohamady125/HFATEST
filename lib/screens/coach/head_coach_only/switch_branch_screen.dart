@@ -72,6 +72,8 @@ class _SwitchBranchScreenState extends State<SwitchBranchScreen>
     }
   }
 
+  // ✅ SIMPLE SOLUTION: Replace _switchToBranch with this quick login approach
+
   Future<void> _switchToBranch(Map<String, dynamic> branch) async {
     if (branch['id'] == _currentBranch?['id']) {
       _showInfo('You are already managing ${branch['name']}');
@@ -95,7 +97,7 @@ class _SwitchBranchScreenState extends State<SwitchBranchScreen>
                   ),
                 ),
                 content: Text(
-                  'This will update all data views to show information for ${branch['name']}.',
+                  'This will reload the app with ${branch['name']} data.',
                   style: const TextStyle(fontSize: 16, color: Colors.grey),
                 ),
                 actions: [
@@ -127,32 +129,121 @@ class _SwitchBranchScreenState extends State<SwitchBranchScreen>
     setState(() => _isSwitching = true);
 
     try {
-      final result = await ApiService.switchBranch(branch['id']);
-      if (result['success']) {
-        // ✅ CRITICAL: Update BranchNotifier immediately
+      print(
+        '🔄 QUICK LOGIN: Switching to branch ${branch['id']} (${branch['name']})',
+      );
+
+      // ✅ STEP 1: Get branch-specific credentials
+      final branchCredentials = _getBranchCredentials(branch['id']);
+
+      if (branchCredentials == null) {
+        _showError('Branch credentials not found for ${branch['name']}');
+        return;
+      }
+
+      print('🔄 QUICK LOGIN: Using credentials for branch ${branch['id']}');
+
+      // ✅ STEP 2: Quick login with branch credentials
+      final loginResult = await ApiService.login(
+        branchCredentials['email']!,
+        branchCredentials['password']!,
+      );
+
+      if (loginResult['success']) {
+        print('✅ QUICK LOGIN: Successfully logged into ${branch['name']}');
+
+        // ✅ STEP 3: Update BranchNotifier immediately
         BranchNotifier().updateBranch(
           branch['id'],
           branch['name'] ?? 'Unknown Branch',
         );
 
-        setState(() => _currentBranch = branch);
         _showSuccess('Switched to ${branch['name']}');
         HapticFeedback.lightImpact();
 
-        // ✅ Return success result to home screen
-        Future.delayed(const Duration(seconds: 1), () {
-          if (mounted)
-            Navigator.of(context).pop(true); // Return true for success
+        // ✅ STEP 4: Navigate to home and replace entire navigation stack
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            // Clear the entire navigation stack and go to home
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              '/home', // Your home route name
+              (route) => false, // Remove all previous routes
+            );
+          }
         });
       } else {
-        _showError('Failed to switch branch: ${result['error']}');
+        final error = loginResult['error'] ?? 'Login failed';
+        print('❌ QUICK LOGIN: Failed - $error');
+        _showError('Failed to switch to ${branch['name']}: $error');
       }
     } catch (e) {
-      print('❌ Error switching branch: $e');
-      _showError('Failed to switch branch');
+      print('❌ QUICK LOGIN: Exception - $e');
+      _showError('Network error occurred while switching branch');
     } finally {
       setState(() => _isSwitching = false);
     }
+  }
+
+  // ✅ STEP 5: Add this method to store branch credentials
+  Map<String, String>? _getBranchCredentials(int branchId) {
+    // 🔐 HARDCODED BRANCH CREDENTIALS
+    // Replace these with your actual branch account credentials
+    final branchCredentials = <int, Map<String, String>>{
+      1: {'email': 'hadayek@gmail.com', 'password': 'MmmM1234'},
+      2: {'email': 'maadi@gmail.com', 'password': 'MmmM1234'},
+      3: {'email': 'newcairo@gmail.com', 'password': 'MmmM1234'},
+      4: {'email': 'october@gmail.com', 'password': 'MmmM1234'},
+      5: {'email': 'nasrcity@gmail.com', 'password': 'MmmM1234'},
+      // Add more branches as needed
+    };
+
+    return branchCredentials[branchId];
+  }
+
+  // ✅ OPTIONAL: Add this method for even better UX
+  Future<void> _quickSwitchWithLoadingOverlay(
+    Map<String, dynamic> branch,
+  ) async {
+    // Show full-screen loading overlay
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => WillPopScope(
+            onWillPop: () async => false,
+            child: Container(
+              color: Colors.black.withOpacity(0.8),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(
+                      color: Color(0xFF007AFF),
+                      strokeWidth: 3,
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Switching to ${branch['name']}...',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Please wait while we load the branch data',
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+    );
+
+    // Perform the quick login
+    await _switchToBranch(branch);
   }
 
   void _showError(String message) {
