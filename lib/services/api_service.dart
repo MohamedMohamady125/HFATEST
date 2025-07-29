@@ -7,7 +7,7 @@ class ApiService {
   // Replace with your actual backend URL
   static const String baseUrl =
       'https://marvelous-tranquility.railway.internal';
-      
+
   static const _storage = FlutterSecureStorage();
 
   // Make storage accessible for other classes

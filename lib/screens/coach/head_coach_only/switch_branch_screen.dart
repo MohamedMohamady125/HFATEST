@@ -74,6 +74,7 @@ class _SwitchBranchScreenState extends State<SwitchBranchScreen>
 
   // ✅ SIMPLE SOLUTION: Replace _switchToBranch with this quick login approach
 
+  // ✅ SIMPLE: Trust the bulletproof backend
   Future<void> _switchToBranch(Map<String, dynamic> branch) async {
     if (branch['id'] == _currentBranch?['id']) {
       _showInfo('You are already managing ${branch['name']}');
@@ -97,7 +98,7 @@ class _SwitchBranchScreenState extends State<SwitchBranchScreen>
                   ),
                 ),
                 content: Text(
-                  'This will reload the app with ${branch['name']} data.',
+                  'This will update all data views to show information for ${branch['name']}.',
                   style: const TextStyle(fontSize: 16, color: Colors.grey),
                 ),
                 actions: [
@@ -130,74 +131,44 @@ class _SwitchBranchScreenState extends State<SwitchBranchScreen>
 
     try {
       print(
-        '🔄 QUICK LOGIN: Switching to branch ${branch['id']} (${branch['name']})',
+        '🔄 SIMPLE: Switching to branch ${branch['id']} (${branch['name']})',
       );
 
-      // ✅ STEP 1: Get branch-specific credentials
-      final branchCredentials = _getBranchCredentials(branch['id']);
+      final result = await ApiService.switchBranch(branch['id']);
 
-      if (branchCredentials == null) {
-        _showError('Branch credentials not found for ${branch['name']}');
-        return;
-      }
+      print('🔄 SIMPLE: API result = $result');
 
-      print('🔄 QUICK LOGIN: Using credentials for branch ${branch['id']}');
+      if (result['success'] == true) {
+        // ✅ SIMPLE: Trust the bulletproof backend
+        final actualBranchId = result['new_branch_id'] ?? branch['id'];
+        final actualBranchName = result['new_branch_name'] ?? branch['name'];
 
-      // ✅ STEP 2: Quick login with branch credentials
-      final loginResult = await ApiService.login(
-        branchCredentials['email']!,
-        branchCredentials['password']!,
-      );
+        print('✅ SIMPLE: Backend confirmed success - updating UI');
 
-      if (loginResult['success']) {
-        print('✅ QUICK LOGIN: Successfully logged into ${branch['name']}');
+        // Update BranchNotifier immediately
+        BranchNotifier().updateBranch(actualBranchId, actualBranchName);
 
-        // ✅ STEP 3: Update BranchNotifier immediately
-        BranchNotifier().updateBranch(
-          branch['id'],
-          branch['name'] ?? 'Unknown Branch',
-        );
+        setState(() => _currentBranch = branch);
 
-        _showSuccess('Switched to ${branch['name']}');
+        _showSuccess('Successfully switched to $actualBranchName');
         HapticFeedback.lightImpact();
 
-        // ✅ STEP 4: Navigate to home and replace entire navigation stack
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) {
-            // Clear the entire navigation stack and go to home
-            Navigator.of(context).pushNamedAndRemoveUntil(
-              '/home', // Your home route name
-              (route) => false, // Remove all previous routes
-            );
-          }
+        // Navigate back with success
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) Navigator.of(context).pop(true);
         });
       } else {
-        final error = loginResult['error'] ?? 'Login failed';
-        print('❌ QUICK LOGIN: Failed - $error');
-        _showError('Failed to switch to ${branch['name']}: $error');
+        // Handle API failure
+        final error = result['error'] ?? 'Unknown error occurred';
+        print('❌ SIMPLE: API failed - $error');
+        _showError('Failed to switch branch: $error');
       }
     } catch (e) {
-      print('❌ QUICK LOGIN: Exception - $e');
+      print('❌ SIMPLE: Exception - $e');
       _showError('Network error occurred while switching branch');
     } finally {
       setState(() => _isSwitching = false);
     }
-  }
-
-  // ✅ STEP 5: Add this method to store branch credentials
-  Map<String, String>? _getBranchCredentials(int branchId) {
-    // 🔐 HARDCODED BRANCH CREDENTIALS
-    // Replace these with your actual branch account credentials
-    final branchCredentials = <int, Map<String, String>>{
-      1: {'email': 'hadayek@gmail.com', 'password': 'MmmM1234'},
-      2: {'email': 'maadi@gmail.com', 'password': 'MmmM1234'},
-      3: {'email': 'newcairo@gmail.com', 'password': 'MmmM1234'},
-      4: {'email': 'october@gmail.com', 'password': 'MmmM1234'},
-      5: {'email': 'nasrcity@gmail.com', 'password': 'MmmM1234'},
-      // Add more branches as needed
-    };
-
-    return branchCredentials[branchId];
   }
 
   // ✅ OPTIONAL: Add this method for even better UX
