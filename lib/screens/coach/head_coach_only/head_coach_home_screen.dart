@@ -366,7 +366,7 @@ class _RegularCoachHomeScreenState extends State<RegularCoachHomeScreen> {
     final s = AppLocalizations.of(context)!;
     return Column(
       children: [
-        // ✅ SIMPLIFIED: Beautiful Header Section (without old branch card)
+        // ✅ UPDATED: Header with inline branch widget
         Container(
           width: double.infinity,
           decoration: const BoxDecoration(
@@ -386,34 +386,46 @@ class _RegularCoachHomeScreenState extends State<RegularCoachHomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Welcome Text
-                  Text(
-                    s.welcome(_firstName),
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
+                  // ✅ NEW: Row with Welcome Text and Branch Widget
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Left side - Welcome Text
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              s.welcome(_firstName),
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              s.coachDashboard,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white.withOpacity(0.9),
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Right side - Small Branch Widget
+                      _buildSmallBranchWidget(),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    s.coachDashboard,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white.withOpacity(0.9),
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  // ✅ REMOVED: Old branch info card section
-                  // The CurrentBranchWidget below will handle branch display
                 ],
               ),
             ),
           ),
         ),
-
-        // ✅ NEW: Current Branch Widget (dedicated widget for branch display)
-        const CurrentBranchWidget(),
 
         // Scrollable Content
         Expanded(
@@ -425,6 +437,34 @@ class _RegularCoachHomeScreenState extends State<RegularCoachHomeScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  // ✅ NEW: Small Branch Widget for Header
+  Widget _buildSmallBranchWidget() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.location_on, color: Colors.white, size: 16),
+          const SizedBox(width: 6),
+          // ✅ This will show the branch name and auto-update
+          Text(
+            BranchNotifier().currentBranchName ?? _branchName,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
