@@ -95,6 +95,8 @@ class _RegularCoachHomeScreenState extends State<RegularCoachHomeScreen> {
     }
   }
 
+  // ✅ FIXED: Replace _loadBranchInfo in your RegularCoachHomeScreen
+
   Future<void> _loadBranchInfo(int? branchId) async {
     if (branchId == null) {
       setState(() {
@@ -105,22 +107,64 @@ class _RegularCoachHomeScreenState extends State<RegularCoachHomeScreen> {
     }
 
     try {
-      final result = await ApiService.getBranchDetails(branchId);
-      if (result['success']) {
-        final branchName = result['data']['name'] ?? 'Unknown Branch';
+      print('🔄 Loading branch info for ID: $branchId');
+
+      // ✅ Method 1: Try the optimized branch name endpoint first
+      final nameResult = await ApiService.getBranchName(branchId);
+      if (nameResult['success'] && nameResult['data'] != null) {
+        final branchName = nameResult['data']['name'] ?? 'Unknown Branch';
         setState(() {
           _branchName = branchName;
           _isLoading = false;
         });
         BranchNotifier().updateBranch(branchId, branchName);
-      } else {
+        print('✅ Branch name loaded via name endpoint: $branchName');
+        return;
+      }
+
+      // ✅ Method 2: Fallback to full branch details
+      final detailsResult = await ApiService.getBranchDetails(branchId);
+      if (detailsResult['success'] && detailsResult['data'] != null) {
+        final branchName = detailsResult['data']['name'] ?? 'Unknown Branch';
         setState(() {
-          _branchName = 'Branch #$branchId';
+          _branchName = branchName;
           _isLoading = false;
         });
-        BranchNotifier().updateBranch(branchId, 'Branch #$branchId');
+        BranchNotifier().updateBranch(branchId, branchName);
+        print('✅ Branch name loaded via details endpoint: $branchName');
+        return;
       }
+
+      // ✅ Method 3: Final fallback - get from branches list
+      print('⚠️ Both name and details failed, trying branches list...');
+      final branchesResult = await ApiService.getAllBranches();
+      if (branchesResult['success']) {
+        final branches = List<Map<String, dynamic>>.from(
+          branchesResult['data'] ?? [],
+        );
+        final branch = branches.firstWhere(
+          (b) => b['id'] == branchId,
+          orElse: () => {'name': 'Branch #$branchId'},
+        );
+        final branchName = branch['name'] ?? 'Branch #$branchId';
+        setState(() {
+          _branchName = branchName;
+          _isLoading = false;
+        });
+        BranchNotifier().updateBranch(branchId, branchName);
+        print('✅ Branch name from branches list: $branchName');
+        return;
+      }
+
+      // ✅ Ultimate fallback
+      setState(() {
+        _branchName = 'Branch #$branchId';
+        _isLoading = false;
+      });
+      BranchNotifier().updateBranch(branchId, 'Branch #$branchId');
+      print('⚠️ Using fallback branch name: Branch #$branchId');
     } catch (e) {
+      print('❌ Error loading branch info: $e');
       setState(() {
         _branchName = 'Branch #$branchId';
         _isLoading = false;

@@ -1624,6 +1624,8 @@ class ApiService {
     }
   }
 
+  // ✅ FIXED: Replace the getBranchDetails method in your ApiService
+
   static Future<Map<String, dynamic>> getBranchDetails(int branchId) async {
     try {
       final headers = await _getHeaders();
@@ -1636,8 +1638,26 @@ class ApiService {
       print('🔄 Response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> branchData = jsonDecode(response.body);
-        return {'success': true, 'data': branchData};
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+        // ✅ FIXED: Handle the correct response structure
+        if (responseData['success'] == true && responseData['data'] != null) {
+          final branchData = responseData['data'];
+
+          print('✅ Branch details parsed successfully:');
+          print('   Branch ID: ${branchData['id']}');
+          print('   Branch Name: ${branchData['name']}');
+
+          return {
+            'success': true,
+            'data': branchData, // ✅ Return the actual branch data
+          };
+        } else {
+          return {
+            'success': false,
+            'error': 'Invalid response format from server',
+          };
+        }
       } else {
         return {
           'success': false,
@@ -1646,6 +1666,42 @@ class ApiService {
       }
     } catch (e) {
       print('❌ Error getting branch details: $e');
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  // ✅ ALTERNATIVE: Add a simpler method for just getting branch name
+  static Future<Map<String, dynamic>> getBranchName(int branchId) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse('$baseUrl/branches/$branchId/name'),
+        headers: headers,
+      );
+
+      print('🔄 Get branch name response: ${response.statusCode}');
+      print('🔄 Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+        if (responseData['success'] == true && responseData['data'] != null) {
+          final branchInfo = responseData['data'];
+
+          print('✅ Branch name retrieved: ${branchInfo['name']}');
+
+          return {'success': true, 'data': branchInfo};
+        } else {
+          return {'success': false, 'error': 'Invalid response format'};
+        }
+      } else {
+        return {
+          'success': false,
+          'error': 'HTTP ${response.statusCode}: ${response.body}',
+        };
+      }
+    } catch (e) {
+      print('❌ Error getting branch name: $e');
       return {'success': false, 'error': e.toString()};
     }
   }
