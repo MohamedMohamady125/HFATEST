@@ -20,6 +20,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 // Import the NEW screen you want to navigate to first
 import 'assign_coaches_screen.dart'; // <--- CHANGE THIS IMPORT (or add if not there)
+import '../../../widgets/current_branch_widgets.dart';
 
 class RegularCoachHomeScreen extends StatefulWidget {
   const RegularCoachHomeScreen({super.key});
@@ -365,7 +366,7 @@ class _RegularCoachHomeScreenState extends State<RegularCoachHomeScreen> {
     final s = AppLocalizations.of(context)!;
     return Column(
       children: [
-        // Beautiful Header Section
+        // ✅ SIMPLIFIED: Beautiful Header Section (without old branch card)
         Container(
           width: double.infinity,
           decoration: const BoxDecoration(
@@ -403,82 +404,16 @@ class _RegularCoachHomeScreenState extends State<RegularCoachHomeScreen> {
                       fontWeight: FontWeight.w400,
                     ),
                   ),
-                  const SizedBox(height: 20),
-
-                  // Branch Info Card
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.location_on,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Current Branch',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.8),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                _branchName,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: _navigateToSwitchBranch,
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.swap_horiz,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  // ✅ REMOVED: Old branch info card section
+                  // The CurrentBranchWidget below will handle branch display
                 ],
               ),
             ),
           ),
         ),
+
+        // ✅ NEW: Current Branch Widget (dedicated widget for branch display)
+        const CurrentBranchWidget(),
 
         // Scrollable Content
         Expanded(
