@@ -5,7 +5,7 @@ import '../../services/auth_services.dart'; // Add this import
 
 class ApiService {
   // Replace with your actual backend URL
-  static const String baseUrl = 'https://backendtest-xlio.onrender.com';
+  static const String baseUrl = 'https://backendtest-production.up.railway.app';
 
   static const _storage = FlutterSecureStorage();
 
