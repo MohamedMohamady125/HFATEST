@@ -20,7 +20,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 // Import the NEW screen you want to navigate to first
 import 'assign_coaches_screen.dart'; // <--- CHANGE THIS IMPORT (or add if not there)
-import '../../../widgets/current_branch_widgets.dart';
+import '../../../widgets/current_branch_widget.dart';
 
 class RegularCoachHomeScreen extends StatefulWidget {
   const RegularCoachHomeScreen({super.key});
